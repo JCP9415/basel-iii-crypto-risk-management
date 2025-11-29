@@ -32,38 +32,74 @@ warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 
 def pre_session_cleanup():
     """
-    🧹 Clean up residual visualizations from PREVIOUS sessions ONLY
-    Uses session_id tracking to prevent deleting current session's work
+    🎯 SMARTER CLEANUP: Only cleans truly stale files, preserves active session work
     """
     try:
+        # Check if we have active analysis that should be preserved
+        has_active_analysis = (
+            st.session_state.get('portfolio_state', {}).get('cbqra_completed', False) or
+            st.session_state.get('analyzer') is not None or
+            st.session_state.get('forecasts') is not None
+        )
+
         # Check if cleanup already done for this session
         if 'cleanup_done' in st.session_state:
-            logger.debug("Cleanup already done for this session - skipping")
+            if has_active_analysis:
+                logger.debug("✅ Cleanup skipped - active analysis present")
+            else:
+                logger.debug("✅ Cleanup already done for this session")
             return
 
         output_dir = BASE_CONFIG['output_dir']
-        if os.path.exists(output_dir):
-            # Remove all PNG files from previous sessions
-            png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
-            if png_files:
-                logger.info(f"🧹 New session detected - cleaning {len(png_files)} old visualizations")
-                for file in png_files:
-                    file_path = os.path.join(output_dir, file)
-                    try:
-                        os.remove(file_path)
-                        logger.info(f"🧹 Cleaned residual visualization: {file}")
-                    except Exception as e:
-                        logger.warning(f"Could not remove {file}: {e}")
+        if not os.path.exists(output_dir):
+            logger.debug("✅ No output directory - nothing to clean")
+            st.session_state['cleanup_done'] = True
+            return
 
-            # Clean old pairwise comparisons
-            old_pairwise = [f for f in os.listdir(output_dir)
-                           if f.startswith('pairwise_') and f.endswith('.png')]
-            for f in old_pairwise:
+        # If we have active analysis, DO NOT CLEAN visualization files
+        if has_active_analysis:
+            logger.info("🔒 Active analysis detected - preserving visualizations")
+            # Only clean temporary or clearly stale files
+            zip_files = [f for f in os.listdir(output_dir) if f.endswith('.zip')]
+            for zip_file in zip_files:
                 try:
-                    os.remove(os.path.join(output_dir, f))
-                    logger.info(f"🧹 Cleaned pairwise: {f}")
+                    os.remove(os.path.join(output_dir, zip_file))
+                    logger.info(f"🧹 Cleaned residual ZIP: {zip_file}")
+                except:
+                    pass
+            st.session_state['cleanup_done'] = True
+            return
+
+        # Only clean PNG files if no active analysis exists
+        png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
+        if png_files:
+            logger.info(f"🧹 New session detected - cleaning {len(png_files)} old visualizations")
+            for file in png_files:
+                file_path = os.path.join(output_dir, file)
+                try:
+                    os.remove(file_path)
+                    logger.info(f"🧹 Cleaned residual visualization: {file}")
                 except Exception as e:
-                    logger.warning(f"Could not remove pairwise {f}: {e}")
+                    logger.warning(f"Could not remove {file}: {e}")
+
+        # Clean old pairwise comparisons (only if no active analysis)
+        old_pairwise = [f for f in os.listdir(output_dir)
+                       if f.startswith('pairwise_') and f.endswith('.png')]
+        for f in old_pairwise:
+            try:
+                os.remove(os.path.join(output_dir, f))
+                logger.info(f"🧹 Cleaned pairwise: {f}")
+            except Exception as e:
+                logger.warning(f"Could not remove pairwise {f}: {e}")
+
+        # Clean ZIP files regardless
+        zip_files = [f for f in os.listdir(output_dir) if f.endswith('.zip')]
+        for zip_file in zip_files:
+            try:
+                os.remove(os.path.join(output_dir, zip_file))
+                logger.info(f"🧹 Cleaned residual ZIP: {zip_file}")
+            except:
+                pass
 
         # Mark cleanup as done for this session
         st.session_state['cleanup_done'] = True
@@ -71,6 +107,8 @@ def pre_session_cleanup():
 
     except Exception as e:
         logger.error(f"Pre-session cleanup failed: {e}")
+        # Even if cleanup fails, mark it as done to prevent repeated attempts
+        st.session_state['cleanup_done'] = True
 # === ENHANCED LOGGING SETUP (FIXED REPETITION) ===
 def setup_logging():
     """Setup logging with proper handlers to prevent repetition"""
@@ -899,6 +937,7 @@ required_states = {
         'cbqra_running': False,
         'locked_profile': None
     },
+    'cleanup_done': False,  # ← ADDED THIS TO PREVENT UNNECESSARY CLEANUP
     'forecasts': None,
     'analyzer': None,
     'correlation_matrix': None,
