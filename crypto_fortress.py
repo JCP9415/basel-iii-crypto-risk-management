@@ -92,15 +92,6 @@ def pre_session_cleanup():
             except Exception as e:
                 logger.warning(f"Could not remove pairwise {f}: {e}")
 
-        # Clean ZIP files regardless
-        zip_files = [f for f in os.listdir(output_dir) if f.endswith('.zip')]
-        for zip_file in zip_files:
-            try:
-                os.remove(os.path.join(output_dir, zip_file))
-                logger.info(f"🧹 Cleaned residual ZIP: {zip_file}")
-            except:
-                pass
-
         # Mark cleanup as done for this session
         st.session_state['cleanup_done'] = True
         logger.info("✅ Pre-session cleanup completed")
