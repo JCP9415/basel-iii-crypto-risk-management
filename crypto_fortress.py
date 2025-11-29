@@ -31,6 +31,10 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 
 def pre_session_cleanup():
+    """
+    🧹 Clean up residual visualizations from PREVIOUS sessions ONLY
+    Uses session_id tracking to prevent deleting current session's work
+    """
     try:
         # Check if cleanup already done for this session
         if 'cleanup_done' in st.session_state:
@@ -60,17 +64,6 @@ def pre_session_cleanup():
                     logger.info(f"🧹 Cleaned pairwise: {f}")
                 except Exception as e:
                     logger.warning(f"Could not remove pairwise {f}: {e}")
-
-            zip_files = [f for f in os.listdir(output_dir) if f.endswith('.zip')]
-            for zip_file in zip_files:
-                try:
-                    os.remove(os.path.join(output_dir, zip_file))
-                    logger.info(f"🧹 Cleaned residual ZIP: {zip_file}")
-                except:
-                    pass
-
-#            except Exception as e:
-#                logger.error(f"Cleanup warning: {e}")
 
         # Mark cleanup as done for this session
         st.session_state['cleanup_done'] = True
