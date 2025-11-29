@@ -6,7 +6,7 @@
 ![CBQRA in Action](assets/demo/analysis_complete.png)
 ![MCMC Progress](assets/mcmc_progress.png)
 ![Visualizations](assets/demo/visualizations.png)
-
+![monte carlo](assets/demo/monte_carlo.png)
 ---
 
 ## 🚀 What's New in v4.6: Operation Fortress
