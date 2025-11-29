@@ -2929,16 +2929,28 @@ with tab4:
             > — **Elton γ John**, 2025
             """)
 
-        # GARCH Forecasts
         if st.checkbox("📈 Show GARCH Volatility Forecasts", key="garch_forecast_toggle"):
             forecast_days = st.slider("Forecast Horizon (days)", 7, 90, 30)
 
-            # Use cached models if available
-            fitted_models = st.session_state.get('garch_fitted_models',
-                                                 garch_engine.fitted_models if GARCH_AVAILABLE else {})
+            # Use cached models if available - WITH PROPER VALIDATION
+            fitted_models = st.session_state.get('garch_fitted_models', {})
+            if not fitted_models and GARCH_AVAILABLE:
+                fitted_models = getattr(garch_engine, 'fitted_models', {})
+
+            # Ensure fitted_models is a dictionary
+            if not isinstance(fitted_models, dict):
+                fitted_models = {}
+                logger.warning("fitted_models was not a dict - reset to empty")
+
+            current_cryptos = [item['name'] for item in CONFIG['crypto_data']]
 
             for crypto in current_cryptos:
-                if crypto in fitted_models and fitted_models[crypto] is not None:
+                # SAFE CHECK: Verify crypto exists in fitted_models and model is not None
+                if (fitted_models and
+                    isinstance(fitted_models, dict) and
+                    crypto in fitted_models and
+                    fitted_models[crypto] is not None):
+
                     model = fitted_models[crypto]
                     with st.expander(f"{crypto} Forecast", expanded=True):
                         try:
@@ -2950,7 +2962,10 @@ with tab4:
                             plt.close(fig)
                         except Exception as e:
                             st.error(f"Error generating forecast for {crypto}: {e}")
-
+                else:
+                    # Only show warning if we expected models but none found
+                    if fitted_models and st.session_state.get('garch_insights'):
+                        st.info(f"📊 No GARCH model available for {crypto} - run 'Fit GARCH Models' first")
         # Crisis Detection System
         st.subheader("🚨 Crisis Detection System")
 
