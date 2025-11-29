@@ -32,10 +32,11 @@ warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 
 def pre_session_cleanup():
     try:
-                # Check if cleanup already done for this session
+        # Check if cleanup already done for this session
         if 'cleanup_done' in st.session_state:
             logger.debug("Cleanup already done for this session - skipping")
             return
+
         output_dir = BASE_CONFIG['output_dir']
         if os.path.exists(output_dir):
             # Remove all PNG files from previous sessions
