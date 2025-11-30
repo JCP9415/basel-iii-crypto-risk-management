@@ -2274,7 +2274,7 @@ with tab2:
                 except Exception as e:
                     st.error(f"Error loading {viz_file}: {e}")
                     logger.error(f"Viz load error for {viz_file}: {e}")
-        else:
+#    else:
             st.warning("⏳ No main visualizations found")
 
             if pairwise_viz_files:
