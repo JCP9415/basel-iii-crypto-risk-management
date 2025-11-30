@@ -31,35 +31,36 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="streamlit")
 
 def pre_session_cleanup():
-    """
-    🎯 SMARTER CLEANUP: Only cleans truly stale files, preserves active session work
-    """
     try:
-        # Check if we have active analysis that should be preserved
-        has_active_analysis = (
-            st.session_state.get('portfolio_state', {}).get('cbqra_completed', False) or
-            st.session_state.get('analyzer') is not None or
-            st.session_state.get('forecasts') is not None
-        )
-
         # Check if cleanup already done for this session
         if 'cleanup_done' in st.session_state:
-            if has_active_analysis:
-                logger.debug("✅ Cleanup skipped - active analysis present")
-            else:
-                logger.debug("✅ Cleanup already done for this session")
+            logger.debug("Cleanup already done for this session - skipping")
             return
 
         output_dir = BASE_CONFIG['output_dir']
-        if not os.path.exists(output_dir):
-            logger.debug("✅ No output directory - nothing to clean")
-            st.session_state['cleanup_done'] = True
-            return
+        if os.path.exists(output_dir):
+            # Remove all PNG files from previous sessions
+            png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
+            if png_files:
+                logger.info(f"🧹 New session detected - cleaning {len(png_files)} old visualizations")
+                for file in png_files:
+                    file_path = os.path.join(output_dir, file)
+                    try:
+                        os.remove(file_path)
+                        logger.info(f"🧹 Cleaned residual visualization: {file}")
+                    except Exception as e:
+                        logger.warning(f"Could not remove {file}: {e}")
 
-        # If we have active analysis, DO NOT CLEAN visualization files
-        if has_active_analysis:
-            logger.info("🔒 Active analysis detected - preserving visualizations")
-            # Only clean temporary or clearly stale files
+            # Clean old pairwise comparisons
+            old_pairwise = [f for f in os.listdir(output_dir)
+                           if f.startswith('pairwise_') and f.endswith('.png')]
+            for f in old_pairwise:
+                try:
+                    os.remove(os.path.join(output_dir, f))
+                    logger.info(f"🧹 Cleaned pairwise: {f}")
+                except Exception as e:
+                    logger.warning(f"Could not remove pairwise {f}: {e}")
+
             zip_files = [f for f in os.listdir(output_dir) if f.endswith('.zip')]
             for zip_file in zip_files:
                 try:
@@ -67,30 +68,9 @@ def pre_session_cleanup():
                     logger.info(f"🧹 Cleaned residual ZIP: {zip_file}")
                 except:
                     pass
-            st.session_state['cleanup_done'] = True
-            return
 
-        # Only clean PNG files if no active analysis exists
-        png_files = [f for f in os.listdir(output_dir) if f.endswith('.png')]
-        if png_files:
-            logger.info(f"🧹 New session detected - cleaning {len(png_files)} old visualizations")
-            for file in png_files:
-                file_path = os.path.join(output_dir, file)
-                try:
-                    os.remove(file_path)
-                    logger.info(f"🧹 Cleaned residual visualization: {file}")
-                except Exception as e:
-                    logger.warning(f"Could not remove {file}: {e}")
-
-        # Clean old pairwise comparisons (only if no active analysis)
-        old_pairwise = [f for f in os.listdir(output_dir)
-                       if f.startswith('pairwise_') and f.endswith('.png')]
-        for f in old_pairwise:
-            try:
-                os.remove(os.path.join(output_dir, f))
-                logger.info(f"🧹 Cleaned pairwise: {f}")
-            except Exception as e:
-                logger.warning(f"Could not remove pairwise {f}: {e}")
+#            except Exception as e:
+#                logger.error(f"Cleanup warning: {e}")
 
         # Mark cleanup as done for this session
         st.session_state['cleanup_done'] = True
@@ -98,8 +78,6 @@ def pre_session_cleanup():
 
     except Exception as e:
         logger.error(f"Pre-session cleanup failed: {e}")
-        # Even if cleanup fails, mark it as done to prevent repeated attempts
-        st.session_state['cleanup_done'] = True
 # === ENHANCED LOGGING SETUP (FIXED REPETITION) ===
 def setup_logging():
     """Setup logging with proper handlers to prevent repetition"""
@@ -928,7 +906,6 @@ required_states = {
         'cbqra_running': False,
         'locked_profile': None
     },
-    'cleanup_done': False,  # ← ADDED THIS TO PREVENT UNNECESSARY CLEANUP
     'forecasts': None,
     'analyzer': None,
     'correlation_matrix': None,
@@ -2274,7 +2251,7 @@ with tab2:
                 except Exception as e:
                     st.error(f"Error loading {viz_file}: {e}")
                     logger.error(f"Viz load error for {viz_file}: {e}")
-#    else:
+        else:
             st.warning("⏳ No main visualizations found")
 
             if pairwise_viz_files:
@@ -2952,28 +2929,16 @@ with tab4:
             > — **Elton γ John**, 2025
             """)
 
+        # GARCH Forecasts
         if st.checkbox("📈 Show GARCH Volatility Forecasts", key="garch_forecast_toggle"):
             forecast_days = st.slider("Forecast Horizon (days)", 7, 90, 30)
 
-            # Use cached models if available - WITH PROPER VALIDATION
-            fitted_models = st.session_state.get('garch_fitted_models', {})
-            if not fitted_models and GARCH_AVAILABLE:
-                fitted_models = getattr(garch_engine, 'fitted_models', {})
-
-            # Ensure fitted_models is a dictionary
-            if not isinstance(fitted_models, dict):
-                fitted_models = {}
-                logger.warning("fitted_models was not a dict - reset to empty")
-
-            current_cryptos = [item['name'] for item in CONFIG['crypto_data']]
+            # Use cached models if available
+            fitted_models = st.session_state.get('garch_fitted_models',
+                                                 garch_engine.fitted_models if GARCH_AVAILABLE else {})
 
             for crypto in current_cryptos:
-                # SAFE CHECK: Verify crypto exists in fitted_models and model is not None
-                if (fitted_models and
-                    isinstance(fitted_models, dict) and
-                    crypto in fitted_models and
-                    fitted_models[crypto] is not None):
-
+                if crypto in fitted_models and fitted_models[crypto] is not None:
                     model = fitted_models[crypto]
                     with st.expander(f"{crypto} Forecast", expanded=True):
                         try:
@@ -2985,10 +2950,7 @@ with tab4:
                             plt.close(fig)
                         except Exception as e:
                             st.error(f"Error generating forecast for {crypto}: {e}")
-                else:
-                    # Only show warning if we expected models but none found
-                    if fitted_models and st.session_state.get('garch_insights'):
-                        st.info(f"📊 No GARCH model available for {crypto} - run 'Fit GARCH Models' first")
+
         # Crisis Detection System
         st.subheader("🚨 Crisis Detection System")
 
