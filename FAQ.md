@@ -539,12 +539,6 @@ Add your own patterns by editing `crypto_fortress.py`.
 - Attribution appreciated but not required
 - No warranty — use at own risk
 
-**Contribution guidelines:**
-- Open issues for bugs/features
-- Submit pull requests for improvements
-- Follow existing code style
-- Add tests for new features
-
 ---
 
 ### Who's responsible if I lose money?
