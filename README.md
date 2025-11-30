@@ -3,10 +3,11 @@
 # 🧠 Crypto Risk Manager Pro — Operation Fortress v4.6
 **Basel III Crypto Risk Management: Industrial-Strength Quant for the Home**
 
-![CBQRA in Action](assets/demo/analysis_complete.png)
-![MCMC Progress](assets/mcmc_progress.png)
-![Visualizations](assets/demo/visualizations.png)
+![CBQRA - tab2](assets/demo/analysis_complete.png)
 ![monte carlo](assets/demo/monte_carlo.png)
+![Backtest](assets/demo/Backtest.png)
+![Potato](assets/demo/Potato.png)
+
 ---
 
 ## 🚀 What's New in v4.6: Operation Fortress
@@ -298,21 +299,6 @@ This dashboard is powered by:
 - 🎵 **Elton John Leverage Blues**: "And I think it's gonna be a long, long time..." — asymmetry matters
 
 ---
-
-## 🤝 Contributing
-
-Contributions welcome! Focus areas:
-- Additional volatility models (EGARCH, TGARCH)
-- Machine learning integrations (LSTM, transformer forecasts)
-- Alternative risk metrics (Sortino, Omega, Calmar ratios)
-- Multi-asset class support (stocks, commodities, FX)
-- Enhanced stress testing scenarios
-
-Open an issue or submit a PR. Let's make quant analysis accessible to everyone.
-
----
-
-## 📜 License
 
 MIT License — free to use, modify, and share. See [LICENSE](LICENSE) for details.
 
