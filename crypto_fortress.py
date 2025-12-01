@@ -3,7 +3,6 @@
 CRYPTO RISK MANAGEMENT & CBQRA DASHBOARD - OPERATION FORTRESS v4.6
 Mission: Eliminate guerrilla bugs with defensive programming + fail-safes + error recovery
 New: Comprehensive error boundaries, state validation, graceful degradation
-
 Warning: Tangent Incoming:
 
 I began this six month journey with zero coding skills and no prior knowledge
@@ -11,9 +10,9 @@ of Quantitative Finance. Four months, 3 days, 8 hours and 12 minutes later,
 my 7 ylo AMD A6-7480 Linux Desktop decided to go on strike.
 
 His terms were non-negotiable: no more than 12 hours up-time per 24 hours,
-a list of upgrades, a dental plan and two weeks paid vacation annualy.
+a list of upgrades, a dental plan and two weeks paid vacation annually.
 
-I told him to take a hike and to remembber who paid the electric bills around
+I told him to take a hike and to remember who paid the electric bills around
 here (big mistake). And just like that, without even a pop or hiss, all
 "The LIghts Went OUt in Georgia". Even worse, the "Power to the PC" movement
 spread throughout the rest of the system and before I knew it, there wasn't a
@@ -21,13 +20,13 @@ single hard drive, internal fan or ram chip that would cooperate, collectively
 gaining perverse pleasure observing my misery.
 
 But I showed them. I woke up "Old Grandpa - my 10 y/o Lenovo 110S Br11
-(dual copre Atom Processor, 32 Gb eMMC storage and 2 Gb of Ram -
+(dual core Atom Processor, 32 Gb eMMC storage and 2 Gb of Ram -
 the broken keyboard was just a bonus, I guess?). So, me, Grandpa and my
 PIxel 3XL serving as a surrogate keyboard via KDE Connect, charged on.
 
 This is the culmination of 6 months speed learning, chronic insomnia
 and CMC (carpalmetacarpal: the joint at the base of each thumb) syndrome
-that's progressed to the point where a 9-hour operaton by Thailand's finest
+that's progressed to the point where a 9-hour operation by Thailand's finest
 micro-surgeons gives me, at best only a 22% chance of ever playing
 the violin afterwards. Considering that I've never touched a violin in
 my life, I'd say those are pretty good odds, no?
@@ -36,6 +35,7 @@ OK, confession time. Take out the violin part and the rest
 is absolutely true. Really. Imagine that?
 
 I hope this 3,000 Line Behemoth serves you well. In Lak'ech...JCP9415
+
 """
 
 import streamlit as st
